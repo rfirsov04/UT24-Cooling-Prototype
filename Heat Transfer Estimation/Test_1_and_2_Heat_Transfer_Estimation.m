@@ -1,14 +1,32 @@
 %% Data Import
 
-%Import the cell SOC OCV curve and measured temperature data
-%Unfortunately temps were only being logged on 4 of 6 cells
+% Import the cell SOC OCV curve
 SOCOCV = importdata("Fine Murata VTC6 SOC OCV Curve.txt");
-%Data for pt1 goes until row 721
+
+% Importing & Merging Test 1 data as it was accidentally split into two files
 nofan_6S_data = importdata("../Data/Test 1 - 200 250W 6S5P/tempzener pt1.mat");
-%Data for part 2 goes until row 2538
 nofan_6S_data_pt2 = importdata("../Data/Test 1 - 200 250W 6S5P/tempzener pt2.mat");
+nofan_6S_data.voltageA0(722:3259,:) = nofan_6S_data_pt2.voltageA0(1:2538,:);
+nofan_6S_data.voltageA1(722:3259,:) = nofan_6S_data_pt2.voltageA1(1:2538,:);
+nofan_6S_data.voltageA2(722:3259,:) = nofan_6S_data_pt2.voltageA2(1:2538,:);
+nofan_6S_data.voltageA3(722:3259,:) = nofan_6S_data_pt2.voltageA3(1:2538,:);
+nofan_6S_data.voltageA4(722:3259,:) = nofan_6S_data_pt2.voltageA4(1:2538,:);
+nofan_6S_data.voltageA5(722:3259,:) = nofan_6S_data_pt2.voltageA5(1:2538,:);
+
+
+% Import Test 2 data. Unfortunately only 4 of 6 temp sensors were working
 singlefan_6S_data = importdata("../Data/Test 2 - 250W 6S5P Fan/zenervoltage_withfan.mat");
 
+% Take the moving mean of the diode voltage to smooth out noise
+% For Test 1
+nofan_6S_data.Vdiode1 = movmean(nofan_6S_data.voltageA0, 10);
+nofan_6S_data.Vdiode2 = movmean(nofan_6S_data.voltageA1, 10);
+nofan_6S_data.Vdiode3 = movmean(nofan_6S_data.voltageA2, 10);
+nofan_6S_data.Vdiode4 = movmean(nofan_6S_data.voltageA3, 10);
+nofan_6S_data.Vdiode5 = movmean(nofan_6S_data.voltageA4, 10);
+nofan_6S_data.Vdiode6 = movmean(nofan_6S_data.voltageA5, 10);
+
+%For Test 2
 singlefan_6S_data.Vdiode1 = movmean(singlefan_6S_data.voltageA2, 10);
 singlefan_6S_data.Vdiode2 = movmean(singlefan_6S_data.voltageA3, 10);
 singlefan_6S_data.Vdiode3 = movmean(singlefan_6S_data.voltageA4, 10);
@@ -17,6 +35,16 @@ singlefan_6S_data.Vdiode4 = movmean(singlefan_6S_data.voltageA5, 10);
 % Import the temp-voltage lookup table from the Enepaq datasheet
 % Column 1 is temp (degC) and column 2 is voltage
 enepaq_lookup_table = [0 2.17;5 2.11;10 2.05;15 1.99;20 1.92;25 1.86;30 1.80;35 1.74;40 1.68;45 1.63;50 1.59;55 1.55;60 1.51];
+
+% Use the lookup table and interpolate to determine the cell temperatures
+
+nofan_6S_data.T1 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode1);
+nofan_6S_data.T2 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode2);
+nofan_6S_data.T3 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode3);
+nofan_6S_data.T4 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode4);
+nofan_6S_data.T5 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode5);
+nofan_6S_data.T6 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),nofan_6S_data.Vdiode6);
+nofan_6S_data.Tavg = (nofan_6S_data.T1 + nofan_6S_data.T2 + nofan_6S_data.T3 + nofan_6S_data.T4 + nofan_6S_data.T5 + nofan_6S_data.T6)/6;
 
 singlefan_6S_data.T1 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),singlefan_6S_data.Vdiode1);
 singlefan_6S_data.T2 = interp1(enepaq_lookup_table(:,2),enepaq_lookup_table(:,1),singlefan_6S_data.Vdiode2);
@@ -28,7 +56,7 @@ singlefan_6S_data.Tavg = (singlefan_6S_data.T1+singlefan_6S_data.T2+singlefan_6S
 
 S_count = 6;                                    % Series configuration of bricks
 Pcount = 5;                                     % Parallel count of cells per brick
-R_cell = 0.0225;                                % Cell internal resistance in Ohm
+R_cell = 0.025;                                % Cell internal resistance in Ohm
 V_initial = 24;                                 % Initial cell voltage
 V_final = 16.4;                                 % Final cell voltage
 Cp_batt = 960;                                  % Cell heat capacity in J/(kg*K)
@@ -46,7 +74,7 @@ T_cell_adiabatic = T_amb;                       % Adiabatic cell temperature
 T_cell_nat = T_amb;                             % Natural convective cooled cell temperature
 T_cell_for = T_amb;                             % Forced convective cooled cell temperature
 htc_nat = 5;                                    % Natural convective cooling coefficient
-htc_for = 20;                                   % Forced convective cooling coefficient
+htc_for = 50;                                   % Forced convective cooling coefficient
 
 time = 1;                                       % Start at time t=1
 predicted_data = zeros(6);                        % Initialize matrix for storing time, heat gen, and temperature
@@ -95,7 +123,8 @@ hold on
 plot(predicted_data(:,1), predicted_data(:,4),'Color','r');     % Plot adiabatic cell temperature
 plot(predicted_data(:,1), predicted_data(:,5),'Color','y');     % Plot natural cooled cell temperature
 plot(predicted_data(:,1), predicted_data(:,6),'Color','c');     % Plot force cooled cell temperature
-plot(predicted_data(:,1),singlefan_6S_data.Tavg(1:length(predicted_data)),'ro','MarkerFaceColor','w');                  % Plot experimental average cell temperature
+plot(predicted_data(:,1), nofan_6S_data.Tavg(1:length(predicted_data)), 'ro','MarkerFaceColor','w');
+plot(predicted_data(:,1),singlefan_6S_data.Tavg(1:length(predicted_data)),'bo','MarkerFaceColor','w');                  % Plot experimental average cell temperature
 title("6S5P VTC6 250W Heat Transfer Coefficient Estimation")
 xlabel("Time (seconds)")
 ylabel('Temperature (degrees Celsius)')
