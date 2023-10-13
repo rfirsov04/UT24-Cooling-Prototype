@@ -1,5 +1,5 @@
 clear
-a = arduino('COM10', 'Uno');
+a = arduino('COM3', 'Uno');
 
 i = 0;
 v1 = readVoltage(a, 'A0')  %Analog input
@@ -62,4 +62,4 @@ while(isempty(flag) == 1) %For making the loop infinite
   flag = get(gcf,'CurrentCharacter');
 end
 
-save tempzener200_2.mat -struct my_structure %or just save it every iteration of the while loop so we don't need flag which delays by like 10 seconds
+save test.mat -struct my_structure %or just save it every iteration of the while loop so we don't need flag which delays by like 10 seconds
