@@ -77,7 +77,7 @@ htc_nat = 5;                                    % Natural convective cooling coe
 htc_for = 50;                                   % Forced convective cooling coefficient
 
 time = 1;                                       % Start at time t=1
-predicted_data = zeros(6);                        % Initialize matrix for storing time, heat gen, and temperature
+predicted_data = zeros(6);                      % Initialize matrix for storing time, heat gen, and temperature
 %% Heat Transfer Calculations
 
 while V_cell > V_final/6
@@ -128,4 +128,4 @@ plot(predicted_data(:,1),singlefan_6S_data.Tavg(1:length(predicted_data)),'bo','
 title("6S5P VTC6 250W Heat Transfer Coefficient Estimation")
 xlabel("Time (seconds)")
 ylabel('Temperature (degrees Celsius)')
-saveas(current_figure, "Heat Transfer Coefficient Estimation.png")
+saveas(current_figure, "Test 1 and 2 Heat Transfer Coefficient Estimation.png")
