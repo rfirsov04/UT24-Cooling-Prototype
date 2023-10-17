@@ -1,5 +1,5 @@
 clear
-a = arduino('COM10', 'Uno');
+a = arduino('COM3', 'Uno');
 i = 0;
 v1 = readVoltage(a, 'A0')  %Analog input
 v2 = readVoltage(a, 'A1')
