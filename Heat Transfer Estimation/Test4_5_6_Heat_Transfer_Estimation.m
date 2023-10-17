@@ -81,7 +81,7 @@ A_ht = pi * 0.018 * 0.0535 / 2;                 % Area of cell that transfers he
 T_amb_45 = 23.3;                                % Ambient temperature for tests 4 and 5
 T_amb_6 = 21.1;                                 % Ambient temperature for test 6
 mdot_air = 0.075;                                % Mass flow rate of air in kg/s
-Cp_air = 1000;                                  % Specific heat capacity of air in J/(kg*K)
+Cp_air = 1005;                                  % Specific heat capacity of air in J/(kg*K)
 
 OCV_cell = V_initial/6;                         % Initial cell voltage assuming all are balanced
 V_cell = OCV_cell;                              % Set initial V_cell to OCV
@@ -121,7 +121,7 @@ while V_cell > V_final/6
     T_cell_5_1 = T_cell_5_1 + Qaccum_cell_5_1/(Cp_batt*m_batt);
     
     %Calculating the air temperature rise after the 1st segment for test 5
-    T_air_between_5 = T_air_between_5 + Qcool_cell_5_1/(mdot_air*Cp_air);
+    T_air_between_5 = T_amb_45 + Qcool_cell_5_1/(mdot_air*Cp_air);
 
     %Calculating convective cooling, accumulated heat, cell temp in the 2nd segment
     Qcool_cell_5_2 = htc_for * A_ht * (T_cell_5_2 - T_air_between_5);   % Heat lost through convective cooling (W)
@@ -135,7 +135,7 @@ while V_cell > V_final/6
     T_cell_6_1 = T_cell_6_1 + Qaccum_cell_6_1/(Cp_batt*m_batt);
     
     %Calculating the air temperature rise after the 1st segment for test 5
-    T_air_between_6 = T_air_between_6 + Qcool_cell_6_1/(mdot_air*Cp_air);
+    T_air_between_6 = T_amb_6 + Qcool_cell_6_1/(mdot_air*Cp_air);
 
     %Calculating convective cooling, accumulated heat, cell temp in the 2nd segment
     Qcool_cell_6_2 = htc_for * A_ht * (T_cell_6_2 - T_air_between_6);   % Heat lost through convective cooling (W)
